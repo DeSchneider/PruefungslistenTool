@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
-from models import db, Pruefung, Pruefer, PruefungsFavoriten
+from models import db, Pruefung, Pruefer, PruefungsFavoriten, Pruefling, Judoka
 import datetime
 
 pruefung_bp = Blueprint('pruefung', __name__)
@@ -33,7 +33,12 @@ def pruefung_bearbeiten():
 @pruefung_bp.route('/detail/<int:pruefung_id>')
 def pruefung_detail(pruefung_id):
     pruefung = Pruefung.query.get_or_404(pruefung_id)
-    return render_template('pruefung_detail.html', pruefung=pruefung)
+    prueflinge = Pruefling.query.filter_by(pruefung_id=pruefung_id).join(Judoka).all()
+
+    prueferanzahl = 1 if not pruefung.fremdpruefer_id else 2
+
+    return render_template('pruefung_detail.html', pruefung=pruefung, prueflinge=prueflinge, prueferanzahl=prueferanzahl)
+
 
 @pruefung_bp.route('/pruefer_suche')
 def pruefer_suche():

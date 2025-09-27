@@ -14,12 +14,17 @@
     color: #294675;
     margin-bottom: 30px;
   }
-  form {
+  .main-container {
+    display: flex;
+    gap: 40px;
+    max-width: 1200px;
+  }
+  form#pruefungForm {
     background: white;
     padding: 30px;
     border-radius: 12px;
     box-shadow: 0 8px 30px rgba(58,71,86,0.18);
-    max-width: 600px;
+    flex: 1 1 60%;
   }
   label {
     display: block;
@@ -40,8 +45,10 @@
     border-color: #477dda;
     outline: none;
   }
-  button {
+  .buttons-row {
     margin-top: 25px;
+  }
+  button {
     background: #477dda;
     color: white;
     padding: 14px 40px;
@@ -50,13 +57,28 @@
     font-size: 18px;
     cursor: pointer;
     transition: background 0.3s;
+    margin-right: 15px;
   }
   button:hover {
     background: #295cd5;
   }
+  a.button-link {
+    margin-top: 25px;
+    display: inline-block;
+    padding: 14px 40px;
+    background: #477dda;
+    color: white;
+    text-decoration: none;
+    border-radius: 7px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  a.button-link:hover {
+    background: #295cd5;
+  }
   .favorite-section {
-    margin-top: 50px;
-    max-width: 600px;
+    flex: 1 1 40%;
   }
   .favoriten-table {
     width: 100%;
@@ -109,157 +131,162 @@
 
 <h1>Neue Prüfung anlegen</h1>
 
-<form method="POST" id="pruefungForm" autocomplete="off">
-  <label>Ausrichter:
-    <input name="ausrichter" type="text" placeholder="z.B. Judo Club Musterstadt" />
-  </label>
-  <label>Bezirk:
-    <input name="bezirk" type="text" placeholder="z.B. Bezirk Nord" />
-  </label>
-  <label>Ort Straße:
-    <input name="ort_strasse" type="text" placeholder="z.B. Musterstraße 10" />
-  </label>
-  <label>Ort Ort:
-    <input name="ort_ort" type="text" placeholder="z.B. Musterstadt" />
-  </label>
-  <label>Datum:
-    <input name="datum" type="date" />
-  </label>
-  <label>Uhrzeit von:
-    <input name="uhrzeit_von" type="time" />
-  </label>
-  <label>Uhrzeit bis:
-    <input name="uhrzeit_bis" type="time" />
-  </label>
-
-  <label>Prüfer Name:
-    <input name="pruefer_name" id="pruefer_suche_input" />
-    <input type="hidden" name="pruefer_id" id="pruefer_id" />
-    <div id="pruefer_results"></div>
-  </label>
-
-  <label>Fremdprüfer Name:
-    <input name="fremdpruefer_name" id="fremdpruefer_suche_input" />
-    <input type="hidden" name="fremdpruefer_id" id="fremdpruefer_id" />
-    <div id="fremdpruefer_results"></div>
-  </label>
-
-  <button type="submit">Prüfung anlegen</button>
-</form>
-
-<div class="favorite-section">
-  <h2>Gespeicherte Favoriten</h2>
-  <form id="favoritSpeichernForm" method="POST" action="{{ url_for('favorit.favorit_speichern') }}">
-    <label>Favoritenname (zum Speichern):
-      <input name="favorit_name" required placeholder="z.B. Herbstprüfung 2025" />
+<div class="main-container">
+  <form method="POST" id="pruefungForm" autocomplete="off">
+    <label>Ausrichter:
+      <input name="ausrichter" type="text" placeholder="z.B. Judo Club Musterstadt" />
     </label>
-    <button type="submit">Als Favorit speichern</button>
+    <label>Bezirk:
+      <input name="bezirk" type="text" placeholder="z.B. Bezirk Nord" />
+    </label>
+    <label>Ort Straße:
+      <input name="ort_strasse" type="text" placeholder="z.B. Musterstraße 10" />
+    </label>
+    <label>Ort Ort:
+      <input name="ort_ort" type="text" placeholder="z.B. Musterstadt" />
+    </label>
+    <label>Datum:
+      <input name="datum" type="date" />
+    </label>
+    <label>Uhrzeit von:
+      <input name="uhrzeit_von" type="time" />
+    </label>
+    <label>Uhrzeit bis:
+      <input name="uhrzeit_bis" type="time" />
+    </label>
 
-    <!-- versteckte Inputs zur Übertragung -->
-    <input type="hidden" name="ausrichter" />
-    <input type="hidden" name="bezirk" />
-    <input type="hidden" name="ort_strasse" />
-    <input type="hidden" name="ort_ort" />
-    <input type="hidden" name="datum" />
-    <input type="hidden" name="uhrzeit_von" />
-    <input type="hidden" name="uhrzeit_bis" />
-    <input type="hidden" name="pruefer_id" />
-    <input type="hidden" name="fremdpruefer_id" />
+    <label>Prüfer Name:
+      <input name="pruefer_name" id="pruefer_suche_input" />
+      <input type="hidden" name="pruefer_id" id="pruefer_id" />
+      <div id="pruefer_results"></div>
+    </label>
+
+    <label>Fremdprüfer Name:
+      <input name="fremdpruefer_name" id="fremdpruefer_suche_input" />
+      <input type="hidden" name="fremdpruefer_id" id="fremdpruefer_id" />
+      <div id="fremdpruefer_results"></div>
+    </label>
+
+    <div class="buttons-row">
+      <button type="submit">Prüfung anlegen</button>
+      <a href="{{ url_for('pruefer.pruefer_verwalten') }}" class="button-link">Prüfer verwalten</a>
+    </div>
+
   </form>
 
-  <table class="favoriten-table">
-    <thead>
-      <tr><th>Name</th><th>Ausrichter</th><th>Datum</th><th>Aktion</th></tr>
-    </thead>
-    <tbody>
-      {% for fav in favoriten %}
-      <tr>
-        <td>{{ fav.name }}</td>
-        <td>{{ fav.ausrichter or "" }}</td>
-        <td>{{ fav.datum.strftime("%d.%m.%Y") if fav.datum else "" }}</td>
-        <td><button class="lade-favorit-btn" data-id="{{ fav.id }}">Übernehmen</button></td>
-      </tr>
-      {% else %}
-      <tr><td colspan="4">Keine Favoriten gespeichert.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="favorite-section">
+    <h2>Gespeicherte Favoriten</h2>
+    <form id="favoritSpeichernForm" method="POST" action="{{ url_for('favorit.favorit_speichern') }}">
+      <label>Favoritenname (zum Speichern):
+        <input name="favorit_name" required placeholder="z.B. Herbstprüfung 2025" />
+      </label>
+      <button type="submit">Als Favorit speichern</button>
+
+      <!-- versteckte Inputs zur Übertragung -->
+      <input type="hidden" name="ausrichter" />
+      <input type="hidden" name="bezirk" />
+      <input type="hidden" name="ort_strasse" />
+      <input type="hidden" name="ort_ort" />
+      <input type="hidden" name="datum" />
+      <input type="hidden" name="uhrzeit_von" />
+      <input type="hidden" name="uhrzeit_bis" />
+      <input type="hidden" name="pruefer_id" />
+      <input type="hidden" name="fremdpruefer_id" />
+    </form>
+
+    <table class="favoriten-table">
+      <thead>
+        <tr><th>Name</th><th>Ausrichter</th><th>Datum</th><th>Aktion</th></tr>
+      </thead>
+      <tbody>
+        {% for fav in favoriten %}
+        <tr>
+          <td>{{ fav.name }}</td>
+          <td>{{ fav.ausrichter or "" }}</td>
+          <td>{{ fav.datum.strftime("%d.%m.%Y") if fav.datum else "" }}</td>
+          <td><button class="lade-favorit-btn" data-id="{{ fav.id }}">Übernehmen</button></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">Keine Favoriten gespeichert.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(function(){
-  function setupPrueferSearch(inputId, resultId, hiddenId) {
-    const $input = $(inputId);
-    const $results = $(resultId);
-    const $hidden = $(hiddenId);
+  $(function(){
+    function setupPrueferSearch(inputId, resultId, hiddenId) {
+      const $input = $(inputId);
+      const $results = $(resultId);
+      const $hidden = $(hiddenId);
 
-    $input.on("input", function(){
-      const val = $input.val();
-      if(val.length < 2) {
-        $results.hide();
-        $hidden.val('');
-        return;
-      }
-
-      $.getJSON("{{ url_for('pruefung.pruefer_suche') }}", {q: val}, function(data){
-        if(data.length === 0){
-          $results.html("<div style='padding:5px;'>Keine Treffer</div>").show();
+      $input.on("input", function(){
+        const val = $input.val();
+        if(val.length < 2) {
+          $results.hide();
           $hidden.val('');
           return;
         }
-        let html = "";
-        data.forEach(function(item){
-          html += `<div style="padding:5px;cursor:pointer;" data-id="${item.id}" data-name="${item.name}">${item.name} (${item.lizenz_nr})</div>`;
-        });
-        $results.html(html).show();
 
-        $results.children("div").click(function(){
-          $input.val($(this).data("name"));
-          $hidden.val($(this).data("id"));
-          $results.hide();
+        $.getJSON("{{ url_for('pruefung.pruefer_suche') }}", {q: val}, function(data){
+          if(data.length === 0){
+            $results.html("<div style='padding:5px;'>Keine Treffer</div>").show();
+            $hidden.val('');
+            return;
+          }
+          let html = "";
+          data.forEach(function(item){
+            html += `<div style="padding:5px;cursor:pointer;" data-id="${item.id}" data-name="${item.name}">${item.name} (${item.lizenz_nr})</div>`;
+          });
+          $results.html(html).show();
+
+          $results.children("div").click(function(){
+            $input.val($(this).data("name"));
+            $hidden.val($(this).data("id"));
+            $results.hide();
+          });
         });
+      });
+
+      $(document).click(function(e) {
+        if (!$(e.target).closest(inputId + ", " + resultId).length) {
+          $results.hide();
+        }
+      });
+    }
+
+    setupPrueferSearch("#pruefer_suche_input", "#pruefer_results", "#pruefer_id");
+    setupPrueferSearch("#fremdpruefer_suche_input", "#fremdpruefer_results", "#fremdpruefer_id");
+
+    $("#favoritSpeichernForm").on("submit", function(){
+      const form = $("#pruefungForm");
+      $(this).find("input[name]").each(function(){
+        const name = $(this).attr("name");
+        if(name === "favorit_name") return;
+        const val = form.find(`[name="${name}"]`).val() || '';
+        $(this).val(val);
       });
     });
 
-    $(document).click(function(e) {
-      if (!$(e.target).closest(inputId + ", " + resultId).length) {
-        $results.hide();
-      }
-    });
-  }
-
-  setupPrueferSearch("#pruefer_suche_input", "#pruefer_results", "#pruefer_id");
-  setupPrueferSearch("#fremdpruefer_suche_input", "#fremdpruefer_results", "#fremdpruefer_id");
-
-  $("#favoritSpeichernForm").on("submit", function(){
-    const form = $("#pruefungForm");
-    $(this).find("input[name]").each(function(){
-      const name = $(this).attr("name");
-      if(name === "favorit_name") return;
-      const val = form.find(`[name="${name}"]`).val() || '';
-      $(this).val(val);
-    });
-  });
-
-  $(".lade-favorit-btn").click(function(){
-    const id = $(this).data("id");
-    $.getJSON("{{ url_for('favorit.favorit_laden', favorit_id=0) }}".replace("0", id), function(data){
-      const form = $("#pruefungForm");
-      form.find('[name="ausrichter"]').val(data.ausrichter || '');
-      form.find('[name="bezirk"]').val(data.bezirk || '');
-      form.find('[name="ort_strasse"]').val(data.ort_strasse || '');
-      form.find('[name="ort_ort"]').val(data.ort_ort || '');
-      form.find('[name="datum"]').val(data.datum || '');
-      form.find('[name="uhrzeit_von"]').val(data.uhrzeit_von || '');
-      form.find('[name="uhrzeit_bis"]').val(data.uhrzeit_bis || '');
-      form.find('#pruefer_id').val(data.pruefer_id || '');
-      form.find('#fremdpruefer_id').val(data.fremdpruefer_id || '');
-      form.find('#pruefer_suche_input').val('');
-      form.find('#fremdpruefer_suche_input').val('');
+    $(".lade-favorit-btn").click(function(){
+      const id = $(this).data("id");
+      $.getJSON("{{ url_for('favorit.favorit_laden', favorit_id=0) }}".replace("0", id), function(data){
+        const form = $("#pruefungForm");
+        form.find('[name="ausrichter"]').val(data.ausrichter || '');
+        form.find('[name="bezirk"]').val(data.bezirk || '');
+        form.find('[name="ort_strasse"]').val(data.ort_strasse || '');
+        form.find('[name="ort_ort"]').val(data.ort_ort || '');
+        form.find('[name="datum"]').val(data.datum || '');
+        form.find('[name="uhrzeit_von"]').val(data.uhrzeit_von || '');
+        form.find('[name="uhrzeit_bis"]').val(data.uhrzeit_bis || '');
+        form.find('#pruefer_id').val(data.pruefer_id || '');
+        form.find('#fremdpruefer_id').val(data.fremdpruefer_id || '');
+        form.find('#pruefer_suche_input').val('');
+        form.find('#fremdpruefer_suche_input').val('');
+      });
     });
   });
-});
 </script>
 
 </body>

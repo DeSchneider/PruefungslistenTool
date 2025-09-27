@@ -12,10 +12,12 @@ def create_app():
     from blueprints.home import home_bp
     from blueprints.pruefung import pruefung_bp
     from blueprints.favorit import favorit_bp
+    from blueprints.pruefer import pruefer_bp
 
     app.register_blueprint(home_bp)
     app.register_blueprint(pruefung_bp, url_prefix='/pruefung')
     app.register_blueprint(favorit_bp, url_prefix='/favorit')
+    app.register_blueprint(pruefer_bp, url_prefix='/pruefer')
 
     with app.app_context():
         db.create_all()
