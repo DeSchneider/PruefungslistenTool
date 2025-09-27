@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Judo Prüfungslisten-Manager</title>
+<style>
+    body {
+        background: linear-gradient(to right, #f1f4fd, #e7efce 80%);
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0; padding: 0;
+    }
+    .container {
+        width: 92%; margin: 50px auto; background: #fff; border-radius: 15px; box-shadow: 0 8px 30px rgba(58,71,86,0.18); padding: 35px;
+    }
+    h1 { color: #294675; font-size: 2.5rem;}
+    .welcome {font-size: 1.28rem; color: #42663a; margin-bottom: 38px;}
+    .actions button {
+        padding: 14px 27px; font-size: 1.15rem; border: none; border-radius: 7px;
+        background: #477dda; color: #fff; margin-right: 18px; cursor: pointer; transition: background 0.2s;
+    }
+    .actions button:hover {background: #295cd5;}
+    .pruefungsliste {margin-top: 44px;}
+    table {width: 100%; border-collapse: collapse;}
+    th, td {padding: 10px; border-bottom: 1px solid #d4ddee;}
+    th {background: #eff3fb; color: #37547c;}
+    tr:nth-child(even) {background: #f7fafd;}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Willkommen beim Judo Prüfungslisten-Manager!</h1>
+    <div class="welcome">
+        Lege neue Prüfungen für deinen Verein an, verwalte bestehende und behalte alle Absolvent:innen im Überblick.<br>
+        <em>Effizient, modern und immer formgerecht.</em>
+    </div>
+    <div class="actions">
+        <a href="{{ url_for('pruefung.neue_pruefung') }}"><button>Neue Prüfung</button></a>
+        <a href="{{ url_for('pruefung.pruefung_bearbeiten') }}"><button>Prüfung bearbeiten</button></a>
+    </div>
+    <div class="pruefungsliste">
+        <h2>Bisher angelegte Prüfungen</h2>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Datum</th>
+                <th>Prüfer Name</th>
+                <th>Ausrichter</th>
+                <th>Anzahl Prüflinge</th>
+            </tr>
+            {% for pruefung in pruefungen %}
+            <tr>
+                <td>{{ pruefung.id }}</td>
+                <td>{{ pruefung.datum.strftime("%d.%m.%Y") if pruefung.datum else "" }}</td>
+                <td>{{ pruefung.pruefer.name if pruefung.pruefer else "" }}</td>
+                <td>{{ pruefung.ausrichter }}</td>
+                <td>{{ pruefung.prueflinge|length }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% if pruefungen|length == 0 %}
+        <p>Noch keine Prüfungen gespeichert.</p>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>

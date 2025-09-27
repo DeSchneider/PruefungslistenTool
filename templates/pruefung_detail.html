@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Prüfung Details</title>
+<style>
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f9ff;
+    margin: 40px;
+    color: #37547c;
+  }
+  h1 {
+    color: #294675;
+    margin-bottom: 25px;
+  }
+  .details {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(58,71,86,0.18);
+    max-width: 600px;
+  }
+  p {
+    font-size: 18px;
+    margin-bottom: 18px;
+  }
+  strong {
+    color: #203864;
+  }
+  a {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 10px 25px;
+    background: #477dda;
+    color: white;
+    text-decoration: none;
+    border-radius: 7px;
+    transition: background 0.3s;
+  }
+  a:hover {
+    background: #295cd5;
+  }
+</style>
+</head>
+<body>
+<div class="details">
+  <h1>Prüfung Details</h1>
+  <p><strong>Ausrichter:</strong> {{ pruefung.ausrichter }}</p>
+  <p><strong>Bezirk:</strong> {{ pruefung.bezirk }}</p>
+  <p><strong>Ort:</strong> {{ pruefung.ort_strasse }}, {{ pruefung.ort_ort }}</p>
+  <p><strong>Datum:</strong> {{ pruefung.datum.strftime('%d.%m.%Y') if pruefung.datum else '' }}</p>
+  <p><strong>Uhrzeit von:</strong> {{ pruefung.uhrzeit_von.strftime('%H:%M') if pruefung.uhrzeit_von else '' }}</p>
+  <p><strong>Uhrzeit bis:</strong> {{ pruefung.uhrzeit_bis.strftime('%H:%M') if pruefung.uhrzeit_bis else '' }}</p>
+  <p><strong>Prüfer:</strong> {{ pruefung.pruefer.name if pruefung.pruefer else 'Keine Angabe' }}</p>
+  <p><strong>Fremdprüfer:</strong> {{ pruefung.fremdpruefer.name if pruefung.fremdpruefer else 'Keine Angabe' }}</p>
+  <a href="{{ url_for('home.index') }}">Zurück zur Übersicht</a>
+</div>
+</body>
+</html>
