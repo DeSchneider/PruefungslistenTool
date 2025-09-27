@@ -146,6 +146,7 @@ function sortTable(n) {
       <th onclick="sortTable(0)">Nachname ▼▲</th>
       <th onclick="sortTable(1)">Vorname ▼▲</th>
       <th onclick="sortTable(2)">Kyu Grad ▼▲</th>
+      <th>Aktion</th> <!-- Neue Spalte -->
     </tr>
   </thead>
   <tbody>
@@ -154,13 +155,19 @@ function sortTable(n) {
       <td>{{ p.judoka.nachname }}</td>
       <td>{{ p.judoka.vorname }}</td>
       <td>{{ p.kyu_grad }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('pruefung.pruefling_entfernen', pruefling_id=p.id, pruefung_id=pruefung.id) }}" onsubmit="return confirm('Prüfling wirklich entfernen?');">
+          <button type="submit" style="background:#c03221; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer;">Entfernen</button>
+        </form>
+      </td>
     </tr>
     {% else %}
-    <tr><td colspan="3">Keine Prüflinge gefunden.</td></tr>
+    <tr><td colspan="4">Keine Prüflinge gefunden.</td></tr>
     {% endfor %}
   </tbody>
 </table>
 
 <a href="{{ url_for('home.index') }}">Zurück zur Übersicht</a>
+<a href="{{ url_for('judoka.judoka_fuer_pruefung', pruefung_id=pruefung.id) }}">Judoka hinzufügen</a>
 </body>
 </html>

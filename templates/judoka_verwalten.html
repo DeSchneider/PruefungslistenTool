@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Judoka verwalten</title>
+<style>
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f9ff;
+    margin: 40px;
+    color: #37547c;
+  }
+  h1 {
+    color: #294675;
+    margin-bottom: 30px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(58,71,86,0.1);
+  }
+  th, td {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e1e9f0;
+    text-align: left;
+  }
+  th {
+    background: #f0f4fb;
+    color: #37547c;
+  }
+  tr:hover {
+    background: #f7fafd;
+  }
+  form {
+    margin-top: 30px;
+    max-width: 600px;
+    background: white;
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(58,71,86,0.18);
+  }
+  label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #294675;
+  }
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #cbd6e2;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus, input[type="date"]:focus {
+    outline: none;
+    border-color: #477dda;
+  }
+  button {
+    background: #477dda;
+    border: none;
+    color: white;
+    padding: 12px 28px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+  }
+  button:hover {
+    background: #295cd5;
+  }
+  .delete-button {
+    background: #c03221;
+    padding: 6px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+  .delete-button:hover {
+    background: #8b1e16;
+  }
+  a.back-link {
+    display: inline-block;
+    margin-top: 25px;
+    color: #477dda;
+    text-decoration: none;
+  }
+  a.back-link:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<h1>Judoka verwalten</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Vorname</th>
+      <th>Nachname</th>
+      <th>Geburtsdatum</th>
+      <th>Verein</th>
+      <th>Kyu Grad</th>
+      <th>Datum der letzten Prüfung</th>
+      <th>Aktion</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for judoka in judokas %}
+    <tr>
+      <td>{{ judoka.vorname }}</td>
+      <td>{{ judoka.nachname }}</td>
+      <td>{{ judoka.geburtsdatum.strftime('%d.%m.%Y') if judoka.geburtsdatum else '' }}</td>
+      <td>{{ judoka.verein }}</td>
+      <td>
+        {% set pruefling = judoka.prueflinge|first %}
+        {{ pruefling.kyu_grad if pruefling else '' }}
+      </td>
+      <td>
+        {{ pruefling.datum_der_pruefung.strftime('%d.%m.%Y') if pruefling and pruefling.datum_der_pruefung else '' }}
+      </td>
+      <td>
+        <form method="POST" action="{{ url_for('judoka.judoka_loeschen', judoka_id=judoka.id) }}" onsubmit="return confirm('Judoka wirklich löschen?');">
+          <button type="submit" class="delete-button">Löschen</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7">Keine Judoka gefunden.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<form method="POST" action="{{ url_for('judoka.judoka_hinzufuegen') }}">
+  <h2>Neuen Judoka anlegen</h2>
+  <label for="vorname">Vorname</label>
+  <input type="text" id="vorname" name="vorname" required />
+  <label for="nachname">Nachname</label>
+  <input type="text" id="nachname" name="nachname" required />
+  <label for="geburtsdatum">Geburtsdatum</label>
+  <input type="date" id="geburtsdatum" name="geburtsdatum" required />
+  <label for="verein">Verein</label>
+  <input type="text" id="verein" name="verein" required />
+  <label for="kyu_grad">Kyu Grad</label>
+  <input type="text" id="kyu_grad" name="kyu_grad" required />
+  <label for="datum_der_pruefung">Datum der letzten Prüfung</label>
+  <input type="date" id="datum_der_pruefung" name="datum_der_pruefung" />
+  <button type="submit">Hinzufügen</button>
+</form>
+
+<a href="{{ url_for('home.index') }}" class="back-link">Zurück zur Startseite</a>
+
+</body>
+</html>

@@ -35,27 +35,29 @@
     </div>
     <div class="actions">
         <a href="{{ url_for('pruefung.neue_pruefung') }}"><button>Neue Prüfung</button></a>
-        <a href="{{ url_for('pruefung.pruefung_bearbeiten') }}"><button>Prüfung bearbeiten</button></a>
+        <a href="{{ url_for('judoka.judoka_liste') }}"><button>Judoka verwalten</button></a>
     </div>
     <div class="pruefungsliste">
         <h2>Bisher angelegte Prüfungen</h2>
         <table>
+          <thead>
             <tr>
-                <th>ID</th>
-                <th>Datum</th>
-                <th>Prüfer Name</th>
-                <th>Ausrichter</th>
-                <th>Anzahl Prüflinge</th>
+              <th>ID</th>
+              <th>Ausrichter</th>
+              <th>Datum</th>
+              <th>Aktion</th>
             </tr>
-            {% for pruefung in pruefungen %}
+          </thead>
+          <tbody>
+            {% for p in pruefungen %}
             <tr>
-                <td>{{ pruefung.id }}</td>
-                <td>{{ pruefung.datum.strftime("%d.%m.%Y") if pruefung.datum else "" }}</td>
-                <td>{{ pruefung.pruefer.name if pruefung.pruefer else "" }}</td>
-                <td>{{ pruefung.ausrichter }}</td>
-                <td>{{ pruefung.prueflinge|length }}</td>
+              <td>{{ p.id }}</td>
+              <td>{{ p.ausrichter }}</td>
+              <td>{{ p.datum.strftime("%d.%m.%Y") if p.datum else "" }}</td>
+              <td><a href="{{ url_for('pruefung.pruefung_bearbeiten', pruefung_id=p.id) }}"><button>Prüfung bearbeiten</button></a></td>
             </tr>
             {% endfor %}
+          </tbody>
         </table>
         {% if pruefungen|length == 0 %}
         <p>Noch keine Prüfungen gespeichert.</p>

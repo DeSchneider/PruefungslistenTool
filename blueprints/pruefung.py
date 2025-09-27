@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, jsonify, flash
 from models import db, Pruefung, Pruefer, PruefungsFavoriten, Pruefling, Judoka
 import datetime
 
@@ -25,18 +25,20 @@ def neue_pruefung():
     favoriten = PruefungsFavoriten.query.order_by(PruefungsFavoriten.name).all()
     return render_template('neue_pruefung.html', favoriten=favoriten)
 
-@pruefung_bp.route('/bearbeiten')
-def pruefung_bearbeiten():
-    return "<h1>Hier kommt die Funktion zum Bearbeiten von Prüfungen.</h1><p>Wird bald ergänzt.</p>"
+
+@pruefung_bp.route('/bearbeiten/<int:pruefung_id>', methods=['GET', 'POST'])
+def pruefung_bearbeiten(pruefung_id):
+    pruefung = Pruefung.query.get_or_404(pruefung_id)
+    prueflinge = Pruefling.query.filter_by(pruefung_id=pruefung_id).join(Judoka).all()
+    prueferanzahl = 1 if not pruefung.fremdpruefer_id else 2
+    return render_template('pruefung_detail.html', pruefung=pruefung, prueflinge=prueflinge, prueferanzahl=prueferanzahl)
 
 
 @pruefung_bp.route('/detail/<int:pruefung_id>')
 def pruefung_detail(pruefung_id):
     pruefung = Pruefung.query.get_or_404(pruefung_id)
     prueflinge = Pruefling.query.filter_by(pruefung_id=pruefung_id).join(Judoka).all()
-
     prueferanzahl = 1 if not pruefung.fremdpruefer_id else 2
-
     return render_template('pruefung_detail.html', pruefung=pruefung, prueflinge=prueflinge, prueferanzahl=prueferanzahl)
 
 
@@ -46,3 +48,37 @@ def pruefer_suche():
     pruefer = Pruefer.query.filter(Pruefer.name.ilike(f'%{q}%')).all()
     results = [{'id': p.id, 'name': p.name, 'lizenz_nr': p.lizenz_nr} for p in pruefer]
     return jsonify(results)
+
+@pruefung_bp.route('/<int:pruefung_id>/prueflinge_hinzufuegen', methods=['POST'])
+def prueflinge_hinzufuegen(pruefung_id):
+    pruefung = Pruefung.query.get_or_404(pruefung_id)
+    judoka_ids = request.form.getlist('judoka_ids')
+
+    if not judoka_ids:
+        flash("Keine Judoka ausgewählt.", "warning")
+        return redirect(url_for('judoka.judoka_fuer_pruefung', pruefung_id=pruefung_id))
+
+    for judoka_id in judoka_ids:
+        # Prüfling nur anlegen, falls noch nicht existiert
+        exists = Pruefling.query.filter_by(pruefung_id=pruefung_id, judoka_id=judoka_id).first()
+        if not exists:
+            neuer_pruefling = Pruefling(
+                judoka_id=judoka_id,
+                pruefung_id=pruefung_id,
+                kyu_grad='',  # Optional: Standardwert oder erweitertes Handling
+                datum_der_pruefung=pruefung.datum
+            )
+            db.session.add(neuer_pruefling)
+    db.session.commit()
+
+    flash(f"{len(judoka_ids)} Judoka wurden hinzugefügt.", "success")
+    # Bleibe auf dieser Seite, aktualisiert die Liste
+    return redirect(url_for('judoka.judoka_fuer_pruefung', pruefung_id=pruefung_id))
+
+
+@pruefung_bp.route('/<int:pruefung_id>/pruefling_entfernen/<int:pruefling_id>', methods=['POST'])
+def pruefling_entfernen(pruefung_id, pruefling_id):
+    pruefling = Pruefling.query.get_or_404(pruefling_id)
+    db.session.delete(pruefling)
+    db.session.commit()
+    return redirect(url_for('pruefung.pruefung_detail', pruefung_id=pruefung_id))

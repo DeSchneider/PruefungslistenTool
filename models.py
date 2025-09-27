@@ -13,15 +13,14 @@ class Judoka(db.Model):
 class Pruefling(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     judoka_id = db.Column(db.Integer, db.ForeignKey('judoka.id'), nullable=False)
-    pruefung_id = db.Column(db.Integer, db.ForeignKey('pruefung.id'), nullable=False)
+    pruefung_id = db.Column(db.Integer, db.ForeignKey('pruefung.id'), nullable=True)
     kyu_grad = db.Column(db.String(50), nullable=False)
+    datum_der_pruefung = db.Column(db.Date, nullable=True)
 
 class Pruefer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     lizenz_nr = db.Column(db.String(50), nullable=False)
-    pruefungen = db.relationship('Pruefung', backref='pruefer', foreign_keys='Pruefung.pruefer_id')
-    fremdpruefungen = db.relationship('Pruefung', backref='fremdpruefer', foreign_keys='Pruefung.fremdpruefer_id')
 
 class Pruefung(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,8 +32,10 @@ class Pruefung(db.Model):
     uhrzeit_von = db.Column(db.Time)
     uhrzeit_bis = db.Column(db.Time)
     prueferanzahl = db.Column(db.Integer)
-    pruefer_id = db.Column(db.Integer, db.ForeignKey('pruefer.id'))  # Prüfer FK
-    fremdpruefer_id = db.Column(db.Integer, db.ForeignKey('pruefer.id'))  # Fremdprüfer FK
+    pruefer_id = db.Column(db.Integer, db.ForeignKey('pruefer.id'))
+    fremdpruefer_id = db.Column(db.Integer, db.ForeignKey('pruefer.id'))
+    pruefer = db.relationship('Pruefer', foreign_keys=[pruefer_id], uselist=False)
+    fremdpruefer = db.relationship('Pruefer', foreign_keys=[fremdpruefer_id], uselist=False)
 
 class PruefungsFavoriten(db.Model):
     id = db.Column(db.Integer, primary_key=True)
