@@ -132,12 +132,12 @@ function sortTable(n) {
     <p><strong>Uhrzeit bis:</strong> {{ pruefung.uhrzeit_bis.strftime('%H:%M') if pruefung.uhrzeit_bis else "-" }}</p>
   </div>
   <div class="info-box">
-    <h3>Prüfer</h3>
-    <p><strong>Prüfer Name:</strong> {{ pruefung.pruefer.name if pruefung.pruefer else "-" }}</p>
-    <p><strong>Prüfer Lizenz:</strong> {{ pruefung.pruefer_lizenz or "-" }}</p>
-    <p><strong>Fremdprüfer Name:</strong> {{ pruefung.fremdpruefer.name if pruefung.fremdpruefer else "-" }}</p>
-    <p><strong>Fremdprüfer Lizenz:</strong> {{ pruefung.fremdpruefer_lizenz or "-" }}</p>
-  </div>
+      <h3>Prüfer</h3>
+      <p><strong>Prüfer Name:</strong> {{ pruefung.pruefer.name if pruefung.pruefer else "-" }}</p>
+      <p><strong>Prüfer Lizenz:</strong> {{ pruefung.pruefer.lizenz_nr if pruefung.pruefer else "-" }}</p>
+      <p><strong>Fremdprüfer Name:</strong> {{ pruefung.fremdpruefer.name if pruefung.fremdpruefer else "-" }}</p>
+      <p><strong>Fremdprüfer Lizenz:</strong> {{ pruefung.fremdpruefer.lizenz_nr if pruefung.fremdpruefer else "-" }}</p>
+    </div>
 </div>
 
 <table id="prueflingTable">
