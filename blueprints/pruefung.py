@@ -141,6 +141,9 @@ def export_docx(pruefung_id):
     vorlage_pfad = 'static/edoc/Kyu_Graduierungsbericht_Vorlage.docx'
     ausgabe_pfad = f'out/Kyu_Graduierungsbericht_{pruefung_id}.docx'
 
-    generiere_graduierungsbericht(vorlage_pfad, ausgabe_pfad, daten)
+    pruefung = Pruefung.query.get(pruefung_id)
+    prueflinge = Pruefling.query.filter_by(pruefung_id=pruefung_id).all()
+
+    generiere_graduierungsbericht(vorlage_pfad, ausgabe_pfad, pruefung, prueflinge)
 
     return send_file(ausgabe_pfad, as_attachment=True, download_name=f'Graduierungsbericht_Pruefung_{pruefung_id}.docx')
