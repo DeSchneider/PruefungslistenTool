@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for
 from models import db, Judoka, Pruefling
 import datetime
+from sqlalchemy import func
 
 judoka_bp = Blueprint('judoka', __name__, url_prefix='/judoka')
 
@@ -58,10 +59,13 @@ def judoka_loeschen(judoka_id):
 
 @judoka_bp.route('/pruefung/<int:pruefung_id>')
 def judoka_fuer_pruefung(pruefung_id):
-    sort = request.args.get('sort', 'name')  # Standardsortierung
+    sort = request.args.get('sort', 'name')
 
     # Unterabfragen für Kyu Grad (MIN) und letztes Prüfungsdatum (MAX) in Prüflingen des Judokas
-    from sqlalchemy import func, select, and_, asc, desc
+    from sqlalchemy import func, asc, desc
+
+    # Judoka, die bereits in dieser Prüfung sind, ausschließen
+    bereits_in_pruefung = db.session.query(Pruefling.judoka_id).filter_by(pruefung_id=pruefung_id).subquery()
 
     # Subquery: aktuelles Min Kyu Grad pro Judoka
     min_kyu_subq = db.session.query(
@@ -75,7 +79,7 @@ def judoka_fuer_pruefung(pruefung_id):
         func.max(Pruefling.datum_der_pruefung).label('max_datum')
     ).group_by(Pruefling.judoka_id).subquery()
 
-    # Hauptquery: alle Judoka mit deren min Kyu und max Datum joinen
+    # Hauptquery: alle Judoka mit deren min Kyu und max Datum joinen, aber nicht die bereits in der Prüfung
     query = db.session.query(
         Judoka,
         min_kyu_subq.c.min_kyu,
@@ -84,18 +88,20 @@ def judoka_fuer_pruefung(pruefung_id):
         min_kyu_subq, Judoka.id == min_kyu_subq.c.judoka_id
     ).outerjoin(
         max_datum_subq, Judoka.id == max_datum_subq.c.judoka_id
+    ).outerjoin(
+        bereits_in_pruefung, Judoka.id == bereits_in_pruefung.c.judoka_id
+    ).filter(
+        bereits_in_pruefung.c.judoka_id.is_(None)  # Nur Judoka, die NICHT bereits in der Prüfung sind
     )
 
     # Sortierung
     if sort == 'vorname':
         query = query.order_by(asc(Judoka.vorname))
     elif sort == 'kyu_grad':
-        # Kyu Grad ggf. numerisch umwandeln, sonst string aufsteigend
         query = query.order_by(asc(min_kyu_subq.c.min_kyu))
     elif sort == 'datum':
         query = query.order_by(desc(max_datum_subq.c.max_datum))
     else:
-        # Standard: Nachname
         query = query.order_by(asc(Judoka.nachname))
 
     ergebnis = query.all()

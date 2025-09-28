@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, jsonif
 from models import db, Pruefung, Pruefer, PruefungsFavoriten, Pruefling, Judoka
 import datetime
 from blueprints.export_docx import generiere_graduierungsbericht
-import io
+from sqlalchemy import func
 
 pruefung_bp = Blueprint('pruefung', __name__)
 
@@ -51,6 +51,7 @@ def pruefer_suche():
     results = [{'id': p.id, 'name': p.name, 'lizenz_nr': p.lizenz_nr} for p in pruefer]
     return jsonify(results)
 
+
 @pruefung_bp.route('/<int:pruefung_id>/prueflinge_hinzufuegen', methods=['POST'])
 def prueflinge_hinzufuegen(pruefung_id):
     pruefung = Pruefung.query.get_or_404(pruefung_id)
@@ -64,17 +65,32 @@ def prueflinge_hinzufuegen(pruefung_id):
         # Prüfling nur anlegen, falls noch nicht existiert
         exists = Pruefling.query.filter_by(pruefung_id=pruefung_id, judoka_id=judoka_id).first()
         if not exists:
+            # Aktuellen Kyu-Grad des Judokas ermitteln (niedrigster Grad = aktueller)
+            aktueller_kyu = db.session.query(func.min(Pruefling.kyu_grad)).filter_by(judoka_id=judoka_id).scalar()
+
+            # Falls noch kein Kyu-Grad vorhanden, Standardwert setzen
+            if not aktueller_kyu:
+                aktueller_kyu = '8'  # Startwert für neue Judoka
+            else:
+                # Nächsten Kyu-Grad berechnen (ein Grad niedriger)
+                try:
+                    naechster_kyu = int(aktueller_kyu) - 1
+                    if naechster_kyu < 1:
+                        naechster_kyu = 1  # Minimum ist 1. Kyu
+                    aktueller_kyu = str(naechster_kyu)
+                except (ValueError, TypeError):
+                    aktueller_kyu = '8'  # Fallback
+
             neuer_pruefling = Pruefling(
                 judoka_id=judoka_id,
                 pruefung_id=pruefung_id,
-                kyu_grad='',  # Optional: Standardwert oder erweitertes Handling
+                kyu_grad=aktueller_kyu,
                 datum_der_pruefung=pruefung.datum
             )
             db.session.add(neuer_pruefling)
-    db.session.commit()
 
+    db.session.commit()
     flash(f"{len(judoka_ids)} Judoka wurden hinzugefügt.", "success")
-    # Bleibe auf dieser Seite, aktualisiert die Liste
     return redirect(url_for('judoka.judoka_fuer_pruefung', pruefung_id=pruefung_id))
 
 
