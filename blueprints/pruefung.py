@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, flash, make_response, send_file
 from models import db, Pruefung, Pruefer, PruefungsFavoriten, Pruefling, Judoka
 import datetime
-from blueprints.export_docx import generiere_graduierungsbericht
+from blueprints.export_docx import generiere_und_exportiere_bericht
 from sqlalchemy import func
 
 pruefung_bp = Blueprint('pruefung', __name__)
@@ -151,15 +151,14 @@ def export_docx(pruefung_id):
         'datum': pruefung.datum.strftime('%d.%m.%Y') if pruefung.datum else '',
         'pruefer_name': pruefer.name if pruefer else '',
         'pruefer_lizenz': pruefer.lizenz_nr if pruefer else '',
-        # weitere Felder...
     }
 
     vorlage_pfad = 'static/edoc/Kyu_Graduierungsbericht_Vorlage.docx'
     ausgabe_pfad = f'out/Kyu_Graduierungsbericht_{pruefung_id}.docx'
 
-    pruefung = Pruefung.query.get(pruefung_id)
     prueflinge = Pruefling.query.filter_by(pruefung_id=pruefung_id).all()
 
-    generiere_graduierungsbericht(vorlage_pfad, ausgabe_pfad, pruefung, prueflinge)
+    generiere_und_exportiere_bericht(vorlage_pfad, ausgabe_pfad, pruefung, prueflinge)
 
     return send_file(ausgabe_pfad, as_attachment=True, download_name=f'Graduierungsbericht_Pruefung_{pruefung_id}.docx')
+
