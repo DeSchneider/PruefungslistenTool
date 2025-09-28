@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import db, Judoka, Pruefling
 import datetime
 from sqlalchemy import func
@@ -106,3 +106,108 @@ def judoka_fuer_pruefung(pruefung_id):
 
     ergebnis = query.all()
     return render_template('judoka_fuer_pruefung.html', judokas=ergebnis, pruefung_id=pruefung_id, sort=sort)
+
+
+@judoka_bp.route('/import_judoka_csv', methods=['POST'])
+def import_judoka_csv():
+    if 'csvfile' not in request.files:
+        flash('Keine Datei ausgewählt')
+        return redirect(url_for('judoka.judoka_liste'))
+
+    file = request.files['csvfile']
+    if file.filename == '':
+        flash('Keine Datei ausgewählt')
+        return redirect(url_for('judoka.judoka_liste'))
+
+    import csv
+    import io
+    from datetime import datetime
+
+    stream = io.StringIO(file.stream.read().decode("utf-8"), newline=None)
+    reader = csv.DictReader(stream)
+
+    imported = 0
+    errors = 0
+
+    for row in reader:
+        try:
+            vorname = row.get('Vorname', '').strip()
+            nachname = row.get('Nachname', '').strip()
+            geburtsdatum_str = row.get('Geburtsdatum', '').strip()
+            hoechster_grad = row.get('Höchster Grad', '').strip()
+            letzte_graduierung_str = row.get('Letzte Graduierung', '').strip()
+
+            # Überspringe leere Zeilen
+            if not vorname or not nachname:
+                continue
+
+            # Geburtsdatum parsen
+            geburtsdatum = None
+            if geburtsdatum_str:
+                try:
+                    geburtsdatum = datetime.strptime(geburtsdatum_str, '%d.%m.%Y').date()
+                except ValueError:
+                    try:
+                        geburtsdatum = datetime.strptime(geburtsdatum_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        continue
+
+            # Prüfe ob Judoka schon existiert
+            judoka = Judoka.query.filter_by(vorname=vorname, nachname=nachname).first()
+
+            if judoka:
+                # Update existierenden Judoka
+                if geburtsdatum:
+                    judoka.geburtsdatum = geburtsdatum
+            else:
+                # Erstelle neuen Judoka
+                if not geburtsdatum:
+                    continue  # Geburtsdatum ist required
+
+                judoka = Judoka(
+                    vorname=vorname,
+                    nachname=nachname,
+                    geburtsdatum=geburtsdatum,
+                    verein=""  # Leer lassen, da nicht in CSV
+                )
+                db.session.add(judoka)
+                db.session.flush()  # Um judoka.id zu bekommen
+
+            # Erstelle Pruefling-Eintrag wenn Grad vorhanden
+            if hoechster_grad:
+                # Parse letzte Graduierung Datum
+                letzte_graduierung_datum = None
+                if letzte_graduierung_str:
+                    try:
+                        letzte_graduierung_datum = datetime.strptime(letzte_graduierung_str, '%d.%m.%Y').date()
+                    except ValueError:
+                        try:
+                            letzte_graduierung_datum = datetime.strptime(letzte_graduierung_str, '%Y-%m-%d').date()
+                        except ValueError:
+                            pass
+
+                # Prüfe ob bereits Pruefling-Eintrag existiert
+                existing_pruefling = Pruefling.query.filter_by(judoka_id=judoka.id, kyu_grad=hoechster_grad).first()
+
+                if not existing_pruefling:
+                    pruefling = Pruefling(
+                        judoka_id=judoka.id,
+                        kyu_grad=hoechster_grad,
+                        datum_der_pruefung=letzte_graduierung_datum
+                    )
+                    db.session.add(pruefling)
+
+            imported += 1
+
+        except Exception as e:
+            errors += 1
+            continue
+
+    try:
+        db.session.commit()
+        flash(f'{imported} Datensätze erfolgreich importiert. {errors} Fehler aufgetreten.')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Fehler beim Speichern: {str(e)}')
+
+    return redirect(url_for('judoka.judoka_liste'))

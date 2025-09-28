@@ -14,6 +14,25 @@
     color: #294675;
     margin-bottom: 30px;
   }
+  .search-bar {
+    margin-bottom: 20px;
+    padding: 15px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(58,71,86,0.1);
+  }
+  .search-bar input {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #cbd6e2;
+    margin-bottom: 0;
+  }
+  .search-bar input:focus {
+    outline: none;
+    border-color: #477dda;
+  }
   table {
     width: 100%;
     border-collapse: collapse;
@@ -22,16 +41,46 @@
     box-shadow: 0 8px 30px rgba(58,71,86,0.1);
   }
   th, td {
-    padding: 15px 20px;
+    padding: 8px 12px;
     border-bottom: 1px solid #e1e9f0;
     text-align: left;
+    vertical-align: middle;
+    height: auto;
+    line-height: 1.3;
   }
   th {
     background: #f0f4fb;
     color: #37547c;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+  th:hover {
+    background: #e6f0fc;
+  }
+  th::after {
+    content: '↕';
+    position: absolute;
+    right: 8px;
+    opacity: 0.3;
+    font-size: 12px;
+  }
+  th.sort-asc::after {
+    content: '↑';
+    opacity: 1;
+  }
+  th.sort-desc::after {
+    content: '↓';
+    opacity: 1;
   }
   tr:hover {
     background: #f7fafd;
+  }
+  .compact-form {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
   }
   form {
     margin-top: 30px;
@@ -47,7 +96,7 @@
     font-weight: 600;
     color: #294675;
   }
-  input[type="text"], input[type="date"] {
+  input[type="text"], input[type="date"], input[type="file"] {
     width: 100%;
     padding: 8px 12px;
     font-size: 16px;
@@ -75,12 +124,32 @@
   }
   .delete-button {
     background: #c03221;
-    padding: 6px 12px;
-    font-size: 14px;
-    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 4px;
+    margin: 0;
   }
   .delete-button:hover {
     background: #8b1e16;
+  }
+  .csv-import-form {
+    margin-bottom: 20px;
+    padding: 15px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(58,71,86,0.1);
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    max-width: none;
+  }
+  .csv-import-form input[type="file"] {
+    margin-bottom: 0;
+    flex: 1;
+  }
+  .csv-import-form button {
+    margin-bottom: 0;
+    white-space: nowrap;
   }
   a.back-link {
     display: inline-block;
@@ -91,49 +160,14 @@
   a.back-link:hover {
     text-decoration: underline;
   }
+  .hidden {
+    display: none;
+  }
 </style>
 </head>
 <body>
 
 <h1>Judoka verwalten</h1>
-
-<table>
-  <thead>
-    <tr>
-      <th>Vorname</th>
-      <th>Nachname</th>
-      <th>Geburtsdatum</th>
-      <th>Verein</th>
-      <th>Kyu Grad</th>
-      <th>Datum der letzten Prüfung</th>
-      <th>Aktion</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for judoka in judokas %}
-    <tr>
-      <td>{{ judoka.vorname }}</td>
-      <td>{{ judoka.nachname }}</td>
-      <td>{{ judoka.geburtsdatum.strftime('%d.%m.%Y') if judoka.geburtsdatum else '' }}</td>
-      <td>{{ judoka.verein }}</td>
-      <td>
-        {% set pruefling = judoka.prueflinge|first %}
-        {{ pruefling.kyu_grad if pruefling else '' }}
-      </td>
-      <td>
-        {{ pruefling.datum_der_pruefung.strftime('%d.%m.%Y') if pruefling and pruefling.datum_der_pruefung else '' }}
-      </td>
-      <td>
-        <form method="POST" action="{{ url_for('judoka.judoka_loeschen', judoka_id=judoka.id) }}" onsubmit="return confirm('Judoka wirklich löschen?');">
-          <button type="submit" class="delete-button">Löschen</button>
-        </form>
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="7">Keine Judoka gefunden.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
 
 <form method="POST" action="{{ url_for('judoka.judoka_hinzufuegen') }}">
   <h2>Neuen Judoka anlegen</h2>
@@ -152,7 +186,129 @@
   <button type="submit">Hinzufügen</button>
 </form>
 
+<form class="csv-import-form" method="post" enctype="multipart/form-data" action="{{ url_for('judoka.import_judoka_csv') }}">
+    <input type="file" name="csvfile" accept=".csv" required />
+    <button type="submit">Aus CSV importieren</button>
+</form>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Nach Judoka suchen (Name, Verein, Kyu-Grad...)">
+</div>
+
+<table id="judokaTable">
+  <thead>
+    <tr>
+      <th onclick="sortTable(0)">Vorname</th>
+      <th onclick="sortTable(1)">Nachname</th>
+      <th onclick="sortTable(2)">Geburtsdatum</th>
+      <th onclick="sortTable(3)">Verein</th>
+      <th onclick="sortTable(4)">Kyu Grad</th>
+      <th onclick="sortTable(5)">Datum der letzten Prüfung</th>
+      <th>Aktion</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for judoka in judokas %}
+    <tr>
+      <td>{{ judoka.vorname }}</td>
+      <td>{{ judoka.nachname }}</td>
+      <td>{{ judoka.geburtsdatum.strftime('%d.%m.%Y') if judoka.geburtsdatum else '' }}</td>
+      <td>{{ judoka.verein }}</td>
+      <td>
+        {% set pruefling = judoka.prueflinge|first %}
+        {{ pruefling.kyu_grad if pruefling else '' }}
+      </td>
+      <td>
+        {{ pruefling.datum_der_pruefung.strftime('%d.%m.%Y') if pruefling and pruefling.datum_der_pruefung else '' }}
+      </td>
+      <td>
+        <form class="compact-form" method="POST" action="{{ url_for('judoka.judoka_loeschen', judoka_id=judoka.id) }}" onsubmit="return confirm('Judoka wirklich löschen?');">
+          <button type="submit" class="delete-button">Löschen</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7">Keine Judoka gefunden.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 <a href="{{ url_for('home.index') }}" class="back-link">Zurück zur Startseite</a>
+
+<script>
+// Suchfunktion
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const filter = this.value.toLowerCase();
+    const table = document.getElementById('judokaTable');
+    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].getElementsByTagName('td');
+        let found = false;
+
+        for (let j = 0; j < cells.length - 1; j++) { // -1 um Aktionen-Spalte auszuschließen
+            if (cells[j].textContent.toLowerCase().includes(filter)) {
+                found = true;
+                break;
+            }
+        }
+
+        if (found) {
+            rows[i].classList.remove('hidden');
+        } else {
+            rows[i].classList.add('hidden');
+        }
+    }
+});
+
+// Sortierfunktion
+let sortDirection = {};
+
+function sortTable(columnIndex) {
+    const table = document.getElementById('judokaTable');
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const rows = Array.from(tbody.getElementsByTagName('tr'));
+    const headers = table.getElementsByTagName('thead')[0].getElementsByTagName('th');
+
+    // Reset alle Header-Klassen
+    for (let i = 0; i < headers.length; i++) {
+        headers[i].classList.remove('sort-asc', 'sort-desc');
+    }
+
+    // Bestimme Sortierrichtung
+    const isAsc = !sortDirection[columnIndex];
+    sortDirection[columnIndex] = isAsc;
+
+    // Setze Header-Klasse
+    headers[columnIndex].classList.add(isAsc ? 'sort-asc' : 'sort-desc');
+
+    // Sortiere Zeilen
+    rows.sort(function(a, b) {
+        const aText = a.getElementsByTagName('td')[columnIndex].textContent.trim();
+        const bText = b.getElementsByTagName('td')[columnIndex].textContent.trim();
+
+        // Versuche numerische Sortierung für Kyu-Grad
+        if (columnIndex === 4) {
+            const aNum = parseInt(aText) || 999;
+            const bNum = parseInt(bText) || 999;
+            return isAsc ? aNum - bNum : bNum - aNum;
+        }
+
+        // Datum-Sortierung
+        if (columnIndex === 2 || columnIndex === 5) {
+            const aDate = aText ? new Date(aText.split('.').reverse().join('-')) : new Date(0);
+            const bDate = bText ? new Date(bText.split('.').reverse().join('-')) : new Date(0);
+            return isAsc ? aDate - bDate : bDate - aDate;
+        }
+
+        // Text-Sortierung
+        return isAsc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+    });
+
+    // Füge sortierte Zeilen zurück ein
+    rows.forEach(row => tbody.appendChild(row));
+}
+</script>
 
 </body>
 </html>
