@@ -72,6 +72,29 @@
   a:hover {
     background: #295cd5;
   }
+  .action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  .edit-btn {
+    display: inline-block;
+    margin-top: 0px;
+    margin-bottom: 30px;
+    padding: 12px 30px;
+    background: #203864;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    transition: background 0.3s;
+    cursor: pointer;
+  }
+  .edit-btn:hover {
+    background: #294675;
+  }
 </style>
 <script>
 function sortTable(n) {
@@ -132,12 +155,17 @@ function sortTable(n) {
     <p><strong>Uhrzeit bis:</strong> {{ pruefung.uhrzeit_bis.strftime('%H:%M') if pruefung.uhrzeit_bis else "-" }}</p>
   </div>
   <div class="info-box">
-      <h3>Prüfer</h3>
-      <p><strong>Prüfer Name:</strong> {{ pruefung.pruefer.name if pruefung.pruefer else "-" }}</p>
-      <p><strong>Prüfer Lizenz:</strong> {{ pruefung.pruefer.lizenz_nr if pruefung.pruefer else "-" }}</p>
-      <p><strong>Fremdprüfer Name:</strong> {{ pruefung.fremdpruefer.name if pruefung.fremdpruefer else "-" }}</p>
-      <p><strong>Fremdprüfer Lizenz:</strong> {{ pruefung.fremdpruefer.lizenz_nr if pruefung.fremdpruefer else "-" }}</p>
-    </div>
+    <h3>Prüfer</h3>
+    <p><strong>Prüfer Name:</strong> {{ pruefung.pruefer.name if pruefung.pruefer else "-" }}</p>
+    <p><strong>Prüfer Lizenz:</strong> {{ pruefung.pruefer.lizenz_nr if pruefung.pruefer else "-" }}</p>
+    <p><strong>Fremdprüfer Name:</strong> {{ pruefung.fremdpruefer.name if pruefung.fremdpruefer else "-" }}</p>
+    <p><strong>Fremdprüfer Lizenz:</strong> {{ pruefung.fremdpruefer.lizenz_nr if pruefung.fremdpruefer else "-" }}</p>
+  </div>
+</div>
+
+<!-- Button zum Bearbeiten -->
+<div class="action-buttons">
+  <a class="edit-btn" href="{{ url_for('pruefung.angaben_bearbeiten', pruefung_id=pruefung.id) }}">Angaben bearbeiten</a>
 </div>
 
 <table id="prueflingTable">
@@ -146,7 +174,7 @@ function sortTable(n) {
       <th onclick="sortTable(0)">Nachname ▼▲</th>
       <th onclick="sortTable(1)">Vorname ▼▲</th>
       <th onclick="sortTable(2)">Kyu Grad ▼▲</th>
-      <th>Aktion</th> <!-- Neue Spalte -->
+      <th>Aktion</th>
     </tr>
   </thead>
   <tbody>
@@ -167,7 +195,10 @@ function sortTable(n) {
   </tbody>
 </table>
 
-<a href="{{ url_for('home.index') }}">Zurück zur Übersicht</a>
-<a href="{{ url_for('judoka.judoka_fuer_pruefung', pruefung_id=pruefung.id) }}">Judoka hinzufügen</a>
+<div class="action-buttons">
+  <a href="{{ url_for('home.index') }}">Zurück zur Übersicht</a>
+  <a href="{{ url_for('judoka.judoka_fuer_pruefung', pruefung_id=pruefung.id) }}">Judoka hinzufügen</a>
+</div>
+
 </body>
 </html>

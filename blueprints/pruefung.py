@@ -82,3 +82,41 @@ def pruefling_entfernen(pruefung_id, pruefling_id):
     db.session.delete(pruefling)
     db.session.commit()
     return redirect(url_for('pruefung.pruefung_detail', pruefung_id=pruefung_id))
+
+
+@pruefung_bp.route('/angaben_bearbeiten/<int:pruefung_id>', methods=['GET', 'POST'])
+def angaben_bearbeiten(pruefung_id):
+    pruefung = Pruefung.query.get_or_404(pruefung_id)
+    pruefer_liste = Pruefer.query.order_by(Pruefer.name).all()
+    if request.method == 'POST':
+        pruefung.ausrichter = request.form.get('ausrichter') or None
+        pruefung.bezirk = request.form.get('bezirk') or None
+
+        datum_str = request.form.get('datum')
+        if datum_str:
+            pruefung.datum = datetime.datetime.strptime(datum_str, '%Y-%m-%d').date()
+        else:
+            pruefung.datum = None
+
+        pruefung.prueferanzahl = request.form.get('prueferanzahl') or None
+        pruefung.ort_strasse = request.form.get('ort_strasse') or None
+        pruefung.ort_ort = request.form.get('ort_ort') or None
+
+        uhrzeit_von = request.form.get('uhrzeit_von')
+        pruefung.uhrzeit_von = datetime.datetime.strptime(uhrzeit_von, '%H:%M').time() if uhrzeit_von else None
+        uhrzeit_bis = request.form.get('uhrzeit_bis')
+        pruefung.uhrzeit_bis = datetime.datetime.strptime(uhrzeit_bis, '%H:%M').time() if uhrzeit_bis else None
+
+        pruefer_id = request.form.get('pruefer_id')
+        pruefung.pruefer_id = int(pruefer_id) if pruefer_id else None
+
+        fremdpruefer_id = request.form.get('fremdpruefer_id')
+        pruefung.fremdpruefer_id = int(fremdpruefer_id) if fremdpruefer_id else None
+
+        db.session.commit()
+        return redirect(url_for('pruefung.pruefung_detail', pruefung_id=pruefung_id))
+    return render_template(
+        'pruefung_angaben_bearbeiten.html',
+        pruefung=pruefung,
+        pruefer_liste=pruefer_liste
+    )
