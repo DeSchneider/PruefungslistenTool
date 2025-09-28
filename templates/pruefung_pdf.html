@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Kyu Graduierungsbericht</title>
+<style>
+  @page {
+    size: A4;
+    margin: 25mm 20mm 25mm 20mm;
+  }
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+    color: #000;
+    margin: 0;
+    padding: 0;
+  }
+  header img {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 12px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid black;
+    margin-bottom: 20px;
+  }
+  /* Rahmen außen und Zwischen den Zeilen */
+  tr {
+    border-bottom: 1px solid black;
+  }
+  /* Kein Rand zwischen Spalten */
+  td {
+    border-left: none;
+    border-right: none;
+    padding: 5px 12px;
+  }
+  /* Rahmen linke und rechte Spalte */
+  tr td:first-child {
+    border-left: 1px solid black;
+    font-weight: bold;
+    width: 18%;
+  }
+  tr td:last-child {
+    border-right: 1px solid black;
+    width: 18%;
+  }
+  tr:first-child td {
+    padding-top: 10px;
+  }
+  tr:last-child {
+    border-bottom: 1px solid black;
+  }
+  /* Spezifische Längen für Inhalte */
+  .flex-row {
+    display: flex;
+    justify-content: space-between;
+  }
+  .signature-section {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+  }
+  .signature-block {
+    width: 40%;
+    border-top: 1px solid black;
+    text-align: center;
+    padding-top: 6px;
+    font-size: 11pt;
+  }
+  .grading-boxes {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 30px;
+  }
+  .grade-box {
+    flex: 1 1 12%;
+    border: 1px solid black;
+    padding: 8px 6px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 11pt;
+  }
+  /* Box Überschriften Farbcodes */
+  .grade-8 { background: #fffacd; }      /* Weiß-gelb */
+  .grade-7 { background: #ffff66; }      /* Gelb */
+  .grade-6 { background: #ffcc66; }      /* Gelb-orange */
+  .grade-5 { background: #ff9933; }      /* Orange */
+  .grade-4 { background: #99cc66; }      /* Orange-grün */
+  .grade-3 { background: #66cc66; }      /* Grün */
+  .grade-2 { background: #3399ff; }      /* Blau */
+  .grade-1 { background: #996633; }      /* Braun */
+  .grade-fail { background: #f2f2f2; }   /* Graduierung nicht erreicht - Grau */
+</style>
+</head>
+<body>
+
+<header>
+  <img src="{{ url_for('static', filename='images/header_banner.png') }}" alt="Header Banner" />
+</header>
+
+<table>
+  <tr>
+    <td>Ausrichter:</td>
+    <td>{{ pruefung.ausrichter or "-" }}</td>
+    <td rowspan="8" style="text-align:center; vertical-align:top; font-weight:bold;">Antrag Nr.: {{ pruefung.id }}</td>
+  </tr>
+  <tr>
+    <td>Bezirk:</td>
+    <td>{{ pruefung.bezirk or "-" }}</td>
+  </tr>
+  <tr>
+    <td>Ort der Graduierung:</td>
+    <td>
+      <div class="flex-row" style="justify-content:flex-start; align-items:center; gap:5px;">
+        <span>{{ pruefung.ort_strasse or "-" }}</span>
+        <span style="margin-left:auto;">{{ pruefung.ort_ort or "-" }}</span>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>Datum:</td>
+    <td>{{ pruefung.datum.strftime('%d.%m.%Y') if pruefung.datum else "-" }}</td>
+  </tr>
+  <tr>
+    <td>Uhrzeit:</td>
+    <td>
+      <div class="flex-row" style="justify-content:flex-start; align-items:center; gap:5px;">
+        <span>von {{ pruefung.uhrzeit_von.strftime('%H:%M') if pruefung.uhrzeit_von else '-' }} Uhr</span>
+        <span style="margin-left:auto;">bis {{ pruefung.uhrzeit_bis.strftime('%H:%M') if pruefung.uhrzeit_bis else '-' }} Uhr</span>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td>Anzahl der Prüfer:</td>
+    <td>{{ prueferanzahl }}</td>
+  </tr>
+  <tr>
+    <td>Name des Prüfers:</td>
+    <td>{{ pruefung.pruefer.name if pruefung.pruefer else "-" }}</td>
+  </tr>
+  <tr>
+    <td>&nbsp;</td>
+    <td><strong>Lizenz Nr.:</strong> {{ pruefung.pruefer.lizenz_nr if pruefung.pruefer else "-" }}</td>
+  </tr>
+  <tr>
+    <td>Anzahl der Graduierungen:</td>
+    <td colspan="2">{{ prueflinge|length }}</td>
+  </tr>
+</table>
+
+<img src="{{ url_for('static', filename='images/footer_stamp.png') }}" alt="Stempel" style="width: 100%; margin-bottom: 25px;">
+
+<div class="grading-boxes">
+  <div class="grade-box grade-fail">Graduierung nicht erreicht</div>
+  <div class="grade-box grade-8">8. Kyu (weiß-gelb)</div>
+  <div class="grade-box grade-7">7. Kyu (gelb)</div>
+  <div class="grade-box grade-6">6. Kyu (gelb-orange)</div>
+  <div class="grade-box grade-5">5. Kyu (orange)</div>
+  <div class="grade-box grade-4">4. Kyu (orange-grün)</div>
+  <div class="grade-box grade-3">3. Kyu (grün)</div>
+  <div class="grade-box grade-2">2. Kyu (blau)</div>
+  <div class="grade-box grade-1">1. Kyu (braun)</div>
+  <div class="grade-box" style="flex: 1 1 9%;">Graduierungen insgesamt</div>
+</div>
+
+<div class="signature-section">
+  <div class="signature-block">Unterschrift des<br>Graduierungsberechtigten</div>
+  <div class="signature-block">Unterschrift des<br>Kyu-Sachbearbeiters</div>
+</div>
+
+</body>
+</html>

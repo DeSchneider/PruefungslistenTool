@@ -198,6 +198,7 @@ function sortTable(n) {
 <div class="action-buttons">
   <a href="{{ url_for('home.index') }}">Zurück zur Übersicht</a>
   <a href="{{ url_for('judoka.judoka_fuer_pruefung', pruefung_id=pruefung.id) }}">Judoka hinzufügen</a>
+  <a href="{{ url_for('pruefung.export_docx', pruefung_id=pruefung.id) }}" class="export-pdf-btn" target="_blank" rel="noopener noreferrer">PDF exportieren</a>
 </div>
 
 </body>
