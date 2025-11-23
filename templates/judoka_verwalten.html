@@ -204,7 +204,8 @@
       <th onclick="sortTable(3)">Verein</th>
       <th onclick="sortTable(4)">Kyu Grad</th>
       <th onclick="sortTable(5)">Datum der letzten Prüfung</th>
-      <th>Aktion</th>
+      <th>Bearbeiten</th>
+      <th>Löschen</th>
     </tr>
   </thead>
   <tbody>
@@ -220,6 +221,11 @@
       </td>
       <td>
         {{ pruefling.datum_der_pruefung.strftime('%d.%m.%Y') if pruefling and pruefling.datum_der_pruefung else '' }}
+      </td>
+      <td>
+        <a href="{{ url_for('judoka.judoka_bearbeiten', judoka_id=judoka.id) }}" style="text-decoration: none;">
+          <button type="button" class="edit-button" style="background: #28a745; padding: 4px 8px; font-size: 12px; border-radius: 4px; border: none; color: white; cursor: pointer; margin-left: 5px;">Bearbeiten</button>
+        </a>
       </td>
       <td>
         <form class="compact-form" method="POST" action="{{ url_for('judoka.judoka_loeschen', judoka_id=judoka.id) }}" onsubmit="return confirm('Judoka wirklich löschen?');">

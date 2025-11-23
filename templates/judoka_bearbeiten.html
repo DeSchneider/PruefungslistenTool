@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Judoka bearbeiten</title>
+<style>
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f9ff;
+    margin: 40px;
+    color: #37547c;
+  }
+  h1 {
+    color: #294675;
+    margin-bottom: 30px;
+  }
+  form {
+    max-width: 600px;
+    background: white;
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(58,71,86,0.18);
+  }
+  label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #294675;
+  }
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #cbd6e2;
+    margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus, input[type="date"]:focus {
+    outline: none;
+    border-color: #477dda;
+  }
+  button {
+    background: #477dda;
+    border: none;
+    color: white;
+    padding: 12px 28px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+    margin-right: 10px;
+  }
+  button:hover {
+    background: #295cd5;
+  }
+  .cancel-button {
+    background: #6c757d;
+  }
+  .cancel-button:hover {
+    background: #5a6268;
+  }
+  a.back-link {
+    display: inline-block;
+    margin-top: 25px;
+    color: #477dda;
+    text-decoration: none;
+  }
+  a.back-link:hover {
+    text-decoration: underline;
+  }
+  .pruefling-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+  }
+  .pruefling-section h3 {
+    margin-top: 0;
+    color: #294675;
+  }
+</style>
+</head>
+<body>
+
+<h1>Judoka bearbeiten</h1>
+
+<form method="POST">
+  <h2>Persönliche Daten</h2>
+  <label for="vorname">Vorname</label>
+  <input type="text" id="vorname" name="vorname" value="{{ judoka.vorname }}" required />
+
+  <label for="nachname">Nachname</label>
+  <input type="text" id="nachname" name="nachname" value="{{ judoka.nachname }}" required />
+
+  <label for="geburtsdatum">Geburtsdatum</label>
+  <input type="date" id="geburtsdatum" name="geburtsdatum" value="{{ judoka.geburtsdatum.strftime('%Y-%m-%d') if judoka.geburtsdatum else '' }}" required />
+
+  <label for="verein">Verein</label>
+  <input type="text" id="verein" name="verein" value="{{ judoka.verein }}" required />
+
+  <div class="pruefling-section">
+    <h3>Aktuelle Graduierung</h3>
+    {% set pruefling = judoka.prueflinge|first %}
+    {% if pruefling %}
+      <label for="kyu_grad">Kyu Grad</label>
+      <input type="text" id="kyu_grad" name="kyu_grad" value="{{ pruefling.kyu_grad }}" />
+
+      <label for="datum_der_pruefung">Datum der letzten Prüfung</label>
+      <input type="date" id="datum_der_pruefung" name="datum_der_pruefung" value="{{ pruefling.datum_der_pruefung.strftime('%Y-%m-%d') if pruefling.datum_der_pruefung else '' }}" />
+    {% else %}
+      <p>Noch keine Graduierung vorhanden.</p>
+      <label for="kyu_grad">Kyu Grad</label>
+      <input type="text" id="kyu_grad" name="kyu_grad" />
+
+      <label for="datum_der_pruefung">Datum der letzten Prüfung</label>
+      <input type="date" id="datum_der_pruefung" name="datum_der_pruefung" />
+    {% endif %}
+  </div>
+
+  <button type="submit">Änderungen speichern</button>
+  <a href="{{ url_for('judoka.judoka_liste') }}" style="text-decoration: none;">
+    <button type="button" class="cancel-button">Abbrechen</button>
+  </a>
+</form>
+
+<a href="{{ url_for('judoka.judoka_liste') }}" class="back-link">Zurück zur Judoka-Liste</a>
+
+</body>
+</html>

@@ -121,6 +121,7 @@ def import_judoka_csv():
 
     import csv
     import io
+    import re
     from datetime import datetime
 
     stream = io.StringIO(file.stream.read().decode("utf-8"), newline=None)
@@ -136,6 +137,7 @@ def import_judoka_csv():
             geburtsdatum_str = row.get('Geburtsdatum', '').strip()
             hoechster_grad = row.get('Höchster Grad', '').strip()
             letzte_graduierung_str = row.get('Letzte Graduierung', '').strip()
+            ersteller = row.get('Ersteller', '').strip()  # Für Verein verwenden
 
             # Überspringe leere Zeilen
             if not vorname or not nachname:
@@ -152,6 +154,14 @@ def import_judoka_csv():
                     except ValueError:
                         continue
 
+            # Extrahiere erste Zahl aus Kyu-Grad
+            kyu_grad_nummer = None
+            if hoechster_grad:
+                # Suche nach der ersten Zahl im String
+                match = re.search(r'\d+', hoechster_grad)
+                if match:
+                    kyu_grad_nummer = match.group()
+
             # Prüfe ob Judoka schon existiert
             judoka = Judoka.query.filter_by(vorname=vorname, nachname=nachname).first()
 
@@ -159,6 +169,9 @@ def import_judoka_csv():
                 # Update existierenden Judoka
                 if geburtsdatum:
                     judoka.geburtsdatum = geburtsdatum
+                # Verwende Ersteller-Spalte für Verein
+                if ersteller:
+                    judoka.verein = ersteller
             else:
                 # Erstelle neuen Judoka
                 if not geburtsdatum:
@@ -168,13 +181,13 @@ def import_judoka_csv():
                     vorname=vorname,
                     nachname=nachname,
                     geburtsdatum=geburtsdatum,
-                    verein=""  # Leer lassen, da nicht in CSV
+                    verein=ersteller if ersteller else ""  # Ersteller als Verein verwenden
                 )
                 db.session.add(judoka)
                 db.session.flush()  # Um judoka.id zu bekommen
 
             # Erstelle Pruefling-Eintrag wenn Grad vorhanden
-            if hoechster_grad:
+            if kyu_grad_nummer:
                 # Parse letzte Graduierung Datum
                 letzte_graduierung_datum = None
                 if letzte_graduierung_str:
@@ -187,12 +200,12 @@ def import_judoka_csv():
                             pass
 
                 # Prüfe ob bereits Pruefling-Eintrag existiert
-                existing_pruefling = Pruefling.query.filter_by(judoka_id=judoka.id, kyu_grad=hoechster_grad).first()
+                existing_pruefling = Pruefling.query.filter_by(judoka_id=judoka.id, kyu_grad=kyu_grad_nummer).first()
 
                 if not existing_pruefling:
                     pruefling = Pruefling(
                         judoka_id=judoka.id,
-                        kyu_grad=hoechster_grad,
+                        kyu_grad=kyu_grad_nummer,  # Nur die erste Zahl verwenden
                         datum_der_pruefung=letzte_graduierung_datum
                     )
                     db.session.add(pruefling)
@@ -211,3 +224,54 @@ def import_judoka_csv():
         flash(f'Fehler beim Speichern: {str(e)}')
 
     return redirect(url_for('judoka.judoka_liste'))
+
+
+@judoka_bp.route('/judoka/bearbeiten/<int:judoka_id>', methods=['GET', 'POST'])
+def judoka_bearbeiten(judoka_id):
+    judoka = Judoka.query.get_or_404(judoka_id)
+
+    if request.method == 'POST':
+        # Update Judoka-Daten
+        judoka.vorname = request.form['vorname']
+        judoka.nachname = request.form['nachname']
+
+        # Geburtsdatum parsen
+        if request.form['geburtsdatum']:
+            from datetime import datetime
+            judoka.geburtsdatum = datetime.strptime(request.form['geburtsdatum'], '%Y-%m-%d').date()
+
+        judoka.verein = request.form['verein']
+
+        # Prüfling-Daten updaten oder erstellen
+        kyu_grad = request.form.get('kyu_grad', '').strip()
+        datum_der_pruefung = request.form.get('datum_der_pruefung', '').strip()
+
+        if kyu_grad:
+            # Hole ersten Prüfling oder erstelle neuen
+            pruefling = judoka.prueflinge[0] if judoka.prueflinge else None
+
+            if pruefling:
+                # Update existierenden Prüfling
+                pruefling.kyu_grad = kyu_grad
+                if datum_der_pruefung:
+                    pruefling.datum_der_pruefung = datetime.strptime(datum_der_pruefung, '%Y-%m-%d').date()
+            else:
+                # Erstelle neuen Prüfling
+                pruefling = Pruefling(
+                    judoka_id=judoka.id,
+                    kyu_grad=kyu_grad,
+                    datum_der_pruefung=datetime.strptime(datum_der_pruefung,
+                                                         '%Y-%m-%d').date() if datum_der_pruefung else None
+                )
+                db.session.add(pruefling)
+
+        try:
+            db.session.commit()
+            flash('Judoka erfolgreich aktualisiert!')
+            return redirect(url_for('judoka.judoka_liste'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Fehler beim Speichern: {str(e)}')
+
+    return render_template('judoka_bearbeiten.html', judoka=judoka)
+
